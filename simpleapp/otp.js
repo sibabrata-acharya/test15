@@ -102,9 +102,7 @@ Otp.prototype.generateOtp = function (app) {
                     res.send(JSON.stringify(resObj), 200);
                 }
             });
-        }o
-
-
+        }
     });
 };
 
