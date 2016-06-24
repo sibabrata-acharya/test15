@@ -56,14 +56,16 @@ app.get('/OAuth', function(req, res){
 app.get('/callback', function(req, res){
     //Check if query params(code) are present and access the information. Else redirect to login page
     if(req.query.code){
+        
+        var services_vcap = JSON.parse(process.env.VCAP_SERVICES || "{}");
+        var serviceUrl = services_vcap.AuthService[0].credentials.serviceUrl+"/account";
+        var apiKey = services_vcap.AuthService[0].credentials.apiKey;
         var body = {
             code : req.query.code,
-            apiKey : process.env.apiKey
+            apiKey : apiKey
         }
 
         //After receiving code. Request for profile data with /account API
-        var services_vcap = JSON.parse(process.env.VCAP_SERVICES || "{}");
-        var serviceUrl = services_vcap.AuthService[0].credentials.serviceUrl+"/account";
         request({
             url: serviceUrl, //URL to hit
             method: 'POST',
