@@ -54,29 +54,35 @@ app.get('/OAuth', function(req, res){
 //  After successful authentication with provider authentication service will redirect
 //  back to the callback which is passed during the /OAuth call
 app.get('/callback', function(req, res){
-    //Check if query params are present and access the information. Else redirect to login page
-    if(req.query.accessToken){
-        console.log("accesstoken : "+ req.query.accessToken);
-        console.log("id : "+ req.query.id);
-        console.log("displayName : "+ req.query.displayName);
-        console.log("provider : "+ req.query.provider);
-
-        //refreshToken will be available only for twitter call
-        if(req.query.refreshToken) {
-            console.log("refreshToken : "+ req.query.refreshToken);
+    //Check if query params(code) are present and access the information. Else redirect to login page
+    if(req.query.code){
+        var body = {
+            code : req.query.code,
+            apiKey : process.env.apiKey
         }
 
-        var profile = {
-            id : req.query.id,
-            displayName : req.query.displayName
-        }
+        //After receiving code. Request for profile data with /account API
+        var services_vcap = JSON.parse(process.env.VCAP_SERVICES || "{}");
+        var serviceUrl = services_vcap.AuthService[0].credentials.serviceUrl+"/account";
+        request({
+            url: serviceUrl, //URL to hit
+            method: 'POST',
+            //Lets post the following key/values as form
+            json: body
+        }, function(error, response, body){
+            if(error) {
+                console.log(error);
+                res.send(response.statusCode, JSON.stringify(error));
 
-        res.render(hookConfig.posthooktemplate, { user: profile });
+            } else {
+                console.log(response.statusCode, body);
+                res.render(hookConfig.posthooktemplate, { user: body });
+            }
+        });
     }
     else {
         res.redirect('/');
     }
-
 });
 
 // GET /logout
